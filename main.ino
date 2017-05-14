@@ -23,8 +23,8 @@ using com::osteres::automation::transmission::packet::Command;
 #define RF_CSN   10
 // Input analog pin for current sensor
 #define PIN_CURRENT_SENSOR_ANALOG 0
-// Output digital pin for power control (1 -> power on, 0 -> power off)
-#define PIN_POWER_COMMAND 4
+// Output digital pin for power off control (0 -> power on, 1 -> power off)
+#define PIN_POWER_OFF_COMMAND 4
 // Output digital pin for shutdown command (1 -> request for shutdown, 0 -> nothing)
 #define PIN_SHUTDOWN_COMMAND 5
 // Input digital pin for lock power on configuration (1 -> lock power on, 0 -> nothing)
@@ -51,7 +51,7 @@ Transmitter transmitter(&radio, false);
 // Application
 TimeSwitchApplication application(
     &transmitter,
-    PIN_POWER_COMMAND,
+    PIN_POWER_OFF_COMMAND,
     PIN_SHUTDOWN_COMMAND,
     PIN_CURRENT_SENSOR_ANALOG,
     PIN_SWITCH_LOCK_POWER_ON,

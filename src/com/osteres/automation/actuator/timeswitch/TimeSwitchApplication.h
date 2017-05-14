@@ -41,7 +41,7 @@ namespace com
                          */
                         TimeSwitchApplication(
                             Transmitter *transmitter,
-                            unsigned int powerCommandPin,
+                            unsigned int powerOffCommandPin,
                             unsigned int shutdownCommandPin,
                             unsigned int currentSensorPin,
                             unsigned int switchLockPowerOnPin,
@@ -49,7 +49,7 @@ namespace com
                         ) : ArduinoApplication(TimeSwitchApplication::SENSOR, transmitter)
                         {
                             this->construct(
-                                powerCommandPin,
+                                powerOffCommandPin,
                                 shutdownCommandPin,
                                 currentSensorPin,
                                 switchLockPowerOnPin,
@@ -132,7 +132,7 @@ namespace com
                          * Common part constructor
                          */
                         void construct(
-                            unsigned int powerCommandPin,
+                            unsigned int powerOffCommandPin,
                             unsigned int shutdownCommandPin,
                             unsigned int currentSensorPin,
                             unsigned int switchLockPowerOnPin,
@@ -140,7 +140,7 @@ namespace com
                         ) {
                             // Create power control
                             this->powerControl = new PowerControl(
-                                powerCommandPin,
+                                powerOffCommandPin,
                                 shutdownCommandPin,
                                 currentSensorPin,
                                 switchLockPowerOnPin,

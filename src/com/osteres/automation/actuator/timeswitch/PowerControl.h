@@ -30,14 +30,14 @@ namespace com
                          * Constructor
                          */
                         PowerControl(
-                            unsigned int powerCommandPin,
+                            unsigned int powerOffCommandPin,
                             unsigned int shutdownCommandPin,
                             unsigned int currentSensorPin,
                             unsigned int switchLockPowerOnPin,
                             unsigned int switchAutoModePin
                         ) {
                             this->construct(
-                                powerCommandPin,
+                                powerOffCommandPin,
                                 shutdownCommandPin,
                                 currentSensorPin,
                                 switchLockPowerOnPin,
@@ -51,9 +51,9 @@ namespace com
                         virtual ~PowerControl()
                         {
                             // Remove power command property
-                            if (this->powerCommandProperty != NULL) {
-                                delete this->powerCommandProperty;
-                                this->powerCommandProperty = NULL;
+                            if (this->powerOffCommandProperty != NULL) {
+                                delete this->powerOffCommandProperty;
+                                this->powerOffCommandProperty = NULL;
                             }
                             // Remove shutdown command property
                             if (this->shutdownCommandProperty != NULL) {
@@ -91,7 +91,7 @@ namespace com
                             // Wait current consumption falls
                             if (this->getCurrentSensorProperty()->read() < 10) {
                                 // If no current consumption, power off
-                                this->getPowerCommandProperty()->set(0);
+                                this->getPowerOffCommandProperty()->set(1);
 
                                 // Reinit shutdown command
                                 this->getShutdownCommandProperty()->set(0);
@@ -105,7 +105,7 @@ namespace com
                          */
                         void powerOn()
                         {
-                            this->getPowerCommandProperty()->set(1);
+                            this->getPowerOffCommandProperty()->set(0);
                             this->getShutdownCommandProperty()->set(0);
 
                             this->setOutputState(true);
@@ -116,7 +116,7 @@ namespace com
                          */
                         void hardPowerOff()
                         {
-                            this->getPowerCommandProperty()->set(0);
+                            this->getPowerOffCommandProperty()->set(1);
                             this->getShutdownCommandProperty()->set(0);
 
                             this->setOutputState(false);
@@ -141,9 +141,9 @@ namespace com
                         /**
                          * Get power command property
                          */
-                        PinProperty<unsigned int> * getPowerCommandProperty()
+                        PinProperty<unsigned int> * getPowerOffCommandProperty()
                         {
-                            return this->powerCommandProperty;
+                            return this->powerOffCommandProperty;
                         }
 
                         /**
@@ -200,14 +200,14 @@ namespace com
                          * Common part constructor
                          */
                         void construct(
-                            unsigned int powerCommandPin,
+                            unsigned int powerOffCommandPin,
                             unsigned int shutdownCommandPin,
                             unsigned int currentSensorPin,
                             unsigned int switchLockPowerOnPin,
                             unsigned int switchAutoModePin
                         ) {
                             // Power command property
-                            this->powerCommandProperty = new PinProperty<unsigned int>(powerCommandPin, true, false);
+                            this->powerOffCommandProperty = new PinProperty<unsigned int>(powerOffCommandPin, true, false);
 
                             // Shutdown command property
                             this->shutdownCommandProperty = new PinProperty<unsigned int>(shutdownCommandPin, true, false);
@@ -224,9 +224,9 @@ namespace com
 
                         /**
                          * Power command property (digital output)
-                         * Set 1 to power on Raspberry, 0 to power off
+                         * Set 0 to power on Raspberry, 1 to power off
                          */
-                        PinProperty<unsigned int> * powerCommandProperty = NULL;
+                        PinProperty<unsigned int> * powerOffCommandProperty = NULL;
 
                         /**
                          * Shutdown command property (digital output)
