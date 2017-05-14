@@ -11,12 +11,16 @@
 #include <com/osteres/automation/actuator/timeswitch/action/ActionManager.h>
 #include <com/osteres/automation/actuator/timeswitch/PowerControl.h>
 #include <com/osteres/automation/arduino/memory/PinProperty.h>
+#include <com/osteres/automation/arduino/memory/StoredProperty.h>
+#include <com/osteres/automation/arduino/component/DataBuffer.h>
 
 using com::osteres::automation::arduino::ArduinoApplication;
 using com::osteres::automation::sensor::Identity;
 using com::osteres::automation::actuator::timeswitch::action::ActionManager;
 using com::osteres::automation::actuator::timeswitch::PowerControl;
 using com::osteres::automation::arduino::memory::PinProperty;
+using com::osteres::automation::arduino::memory::StoredProperty;
+using com::osteres::automation::arduino::component::DataBuffer;
 
 namespace com
 {
@@ -66,6 +70,16 @@ namespace com
                             if (this->powerControl != NULL) {
                                 delete this->powerControl;
                                 this->powerControl = NULL;
+                            }
+                            // Remove shutdown buffer
+                            if (this->shutdownBuffer != NULL) {
+                                delete this->shutdownBuffer;
+                                this->shutdownBuffer = NULL;
+                            }
+                            // Shutdown delay property
+                            if (this->shutdownDelayProperty != NULL) {
+                                delete this->shutdownDelayProperty;
+                                this->shutdownDelayProperty = NULL;
                             }
                         }
 
@@ -126,6 +140,22 @@ namespace com
                             return this->powerControl;
                         }
 
+                        /**
+                         * Get shutdown delay propery
+                         */
+                        StoredProperty<unsigned int> * getShutdownDelayProperty()
+                        {
+                            return this->shutdownDelayProperty;
+                        }
+
+                        /**
+                         * Get shutdown buffer: time before send shutdown command
+                         */
+                        DataBuffer * getShutdownBuffer()
+                        {
+                            return this->shutdownBuffer;
+                        }
+
                     protected:
 
                         /**
@@ -150,12 +180,28 @@ namespace com
                             // Create action manager (process when receive transmission)
                             ActionManager *actionManager = new ActionManager(this->powerControl);
                             this->setActionManager(actionManager);
+
+                            // Time feature
+                            this->shutdownDelayProperty = new StoredProperty<unsigned int>();
+                            // TODO: Need to find available address
+                            this->shutdownDelayProperty->set(30000); // 30s
+                            this->shutdownBuffer = new DataBuffer(this->shutdownDelayProperty->get());
                         }
 
                         /**
                          * Power control component
                          */
                         PowerControl * powerControl = NULL;
+
+                        /**
+                         * Shutdown buffer: time before send shutdown command
+                         */
+                        DataBuffer * shutdownBuffer = NULL;
+
+                        /**
+                         * Shutdown delay property
+                         */
+                        StoredProperty<unsigned int> * shutdownDelayProperty = NULL;
                     };
                 }
             }
