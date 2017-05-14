@@ -7,8 +7,6 @@
 #include <com/osteres/automation/actuator/timeswitch/TimeSwitchApplication.h>
 #include <com/osteres/automation/transmission/Transmitter.h>
 #include <com/osteres/automation/arduino/transmission/ArduinoRequester.h>
-#include <com/osteres/automation/arduino/component/BatteryLevel.h>
-#include <com/osteres/automation/arduino/display/device/Screen.h>
 
 
 using com::osteres::automation::actuator::timeswitch::TimeSwitchApplication;
@@ -16,8 +14,6 @@ using com::osteres::automation::transmission::Transmitter;
 using com::osteres::automation::arduino::transmission::ArduinoRequester;
 using com::osteres::automation::transmission::packet::Packet;
 using com::osteres::automation::transmission::packet::Command;
-using com::osteres::automation::arduino::component::BatteryLevel;
-using com::osteres::automation::arduino::display::device::Screen;
 
 /*
  * Pin

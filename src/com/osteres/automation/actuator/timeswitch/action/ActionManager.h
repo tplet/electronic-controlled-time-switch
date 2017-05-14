@@ -9,18 +9,12 @@
 #include <StandardCplusplus.h>
 #include <string>
 #include <com/osteres/automation/transmission/packet/Command.h>
-#include <com/osteres/automation/transmission/packet/CommandString.h>
 #include <com/osteres/automation/transmission/packet/Packet.h>
-#include <com/osteres/automation/arduino/action/ArduinoActionManager.h>
-#include <com/osteres/automation/arduino/action/SensorIdentifierAction.h>
-#include <com/osteres/automation/actuator/timeswitch/TimeSwitchApplication.h>
+#include <com/osteres/automation/actuator/timeswitch/PowerControl.h>
 
 using com::osteres::automation::transmission::packet::Command;
-using com::osteres::automation::transmission::packet::CommandString;
 using com::osteres::automation::transmission::packet::Packet;
-using com::osteres::automation::arduino::action::ArduinoActionManager;
-using com::osteres::automation::arduino::action::SensorIdentifierAction;
-using com::osteres::automation::actuator::timeswitch::TimeSwitchApplication;
+using com::osteres::automation::actuator::timeswitch::PowerControl;
 using std::string;
 
 namespace com
@@ -41,9 +35,9 @@ namespace com
                             /**
                              * Constructor
                              */
-                            ActionManager(TimeSwitchApplication *application) : ArduinoActionManager()
+                            ActionManager(PowerControl * powerControl) : ArduinoActionManager()
                             {
-                                this->application = application;
+                                this->powerControl = powerControl;
                             }
 
                             /**
@@ -60,27 +54,35 @@ namespace com
                                     bool enable = packet->getDataUChar1() == 1;
 
                                     // If auto-mode enable only
-                                    if (application->isAutoMode()) {
+                                    if (this->getPowerControl()->isAutoMode()) {
                                         // If power on command and output currently power off
-                                        if (enable && !application->getOutputState()) {
+                                        if (enable && !this->getPowerControl()->getOutputState()) {
                                             // Power on
-                                            application->powerOn();
+                                            this->getPowerControl()->powerOn();
                                         }
                                         // Else if power off command and output currently power on
-                                        else if (!enable && application->getOutputState()) {
+                                        else if (!enable && this->getPowerControl()->getOutputState()) {
                                             // Power off
-                                            application->securePowerOff();
+                                            this->getPowerControl()->securePowerOff();
                                         }
                                     }
                                 }
                             }
 
+                            /**
+                             * Get power control component
+                             */
+                            PowerControl * getPowerControl()
+                            {
+                                return this->powerControl;
+                            }
+
                         protected:
 
                             /**
-                             * Application
+                             * Power control component
                              */
-                            TimeSwitchApplication * application = NULL;
+                            PowerControl * powerControl = NULL;
 
                         };
                     }
