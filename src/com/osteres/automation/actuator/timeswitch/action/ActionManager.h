@@ -63,6 +63,8 @@ namespace com
                                     if (enable && !powerControl->getOutputState()) {
                                         // Power on
                                         powerControl->powerOn();
+                                        // Reset buffer
+                                        this->getShutdownBuffer()->reset();
                                     }
                                     // Else if power off command and output currently power on
                                     else if (!enable && powerControl->getOutputState()) {

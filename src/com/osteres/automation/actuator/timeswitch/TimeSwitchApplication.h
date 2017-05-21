@@ -106,8 +106,7 @@ namespace com
 
 
                             // TEMP
-                            this->getPropertyIdentifier()->set(0);
-                            this->getShutdownBuffer()->setBufferDelay(10000); //10s
+//                            this->getShutdownBuffer()->setBufferDelay(10000); //10s
                         }
 
                         /**
