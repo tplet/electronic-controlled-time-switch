@@ -5,12 +5,16 @@
 #ifndef COM_OSTERES_AUTOMATION_ACTUATOR_TIMESWITCH_POWERCONTROL_H
 #define COM_OSTERES_AUTOMATION_ACTUATOR_TIMESWITCH_POWERCONTROL_H
 
+#define ACS712_RAPPORT 0.185 // V per A
+
 #include <Arduino.h>
 #include <StandardCplusplus.h>
 #include <string>
 #include <com/osteres/automation/arduino/memory/PinProperty.h>
+#include <com/osteres/arduino/util/VccReader.h>
 
 using com::osteres::automation::arduino::memory::PinProperty;
+using com::osteres::arduino::util::VccReader;
 using std::string;
 
 namespace com
@@ -85,17 +89,22 @@ namespace com
                          */
                         void securePowerOff()
                         {
+                            Serial.println("Secure power off or check to terminate process");
                             // Enable shutdown command
                             this->getShutdownCommandProperty()->set(1);
 
+                            // Flag to indicate that shutdown has been requested
+                            this->setShutdownRequested(true);
+
                             // Wait current consumption falls
-                            if (this->getCurrentSensorProperty()->read() < 10) {
+                            if (!this->isReallyPowerOn()) {
                                 // If no current consumption, power off
                                 this->getPowerOffCommandProperty()->set(1);
 
                                 // Reinit shutdown command
                                 this->getShutdownCommandProperty()->set(0);
 
+                                this->setShutdownRequested(false);
                                 this->setOutputState(false);
                             }
                         }
@@ -105,9 +114,12 @@ namespace com
                          */
                         void powerOn()
                         {
+                            Serial.println("Power on");
+
                             this->getPowerOffCommandProperty()->set(0);
                             this->getShutdownCommandProperty()->set(0);
 
+                            this->setShutdownRequested(false);
                             this->setOutputState(true);
                         }
 
@@ -116,10 +128,27 @@ namespace com
                          */
                         void hardPowerOff()
                         {
+                            Serial.println("Hard power off");
                             this->getPowerOffCommandProperty()->set(1);
                             this->getShutdownCommandProperty()->set(0);
 
+                            this->setShutdownRequested(false);
                             this->setOutputState(false);
+                        }
+
+                        /**
+                         * Check if device really power on by checking current consumption
+                         */
+                        bool isReallyPowerOn()
+                        {
+                            // Calculate current consumption (in mA)
+                            unsigned int vRead = this->getCurrentSensorProperty()->read(10);
+                            float vcc = VccReader::readV();
+                            float halfVcc = vcc/2.0;
+                            float current = abs(round(100 * 1000 * ( halfVcc - ( vcc * vRead / 1023.0 ) ) / ACS712_RAPPORT)) / 100.0;
+
+                            // Wait current consumption falls
+                            return current >= 100;
                         }
 
                         /**
@@ -194,6 +223,22 @@ namespace com
                             this->outputState = state;
                         }
 
+                        /**
+                         * Flag to indicate if shutdown has been requested
+                         */
+                        bool isShutdownRequested()
+                        {
+                            return this->shutdownRequested;
+                        }
+
+                        /**
+                         * Set flag to indicate if shutdown has been requested
+                         */
+                        void setShutdownRequested(bool flag)
+                        {
+                            this->shutdownRequested = flag;
+                        }
+
                     protected:
 
                         /**
@@ -263,6 +308,11 @@ namespace com
                          * false: Output is considering as power off
                          */
                         bool outputState = false;
+
+                        /**
+                         * Flag to indicate if shutdown has been requested
+                         */
+                        bool shutdownRequested = false;
                     };
                 }
             }

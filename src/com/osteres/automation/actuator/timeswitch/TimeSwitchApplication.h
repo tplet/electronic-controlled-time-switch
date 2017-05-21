@@ -96,6 +96,10 @@ namespace com
 
                             // Transmission
                             this->transmitter->setActionManager(this->getActionManager());
+
+
+                            // TEMP
+                            this->getShutdownBuffer()->setBufferDelay(10000); //10s
                         }
 
                         /**
@@ -113,19 +117,53 @@ namespace com
                             } // Process
                             else {
 
+                                PowerControl * powerControl = this->getPowerControl();
+
+                                //
+                                // Update real state of device
+                                //
+                                // If shutdown has been requested, keep in touch to terminate process
+                                if (powerControl->isShutdownRequested()) {
+                                    powerControl->securePowerOff();
+                                }
+                                // Else, check by using real state measured
+                                else {
+                                    bool reallyPowerOn = powerControl->isReallyPowerOn();
+                                    // Except if power on is locked, if mark as powered on but in reality device is powered off
+                                    if (!powerControl->isLockPowerOn() && powerControl->getOutputState() && !reallyPowerOn) {
+                                        // Hard power off
+                                        powerControl->hardPowerOff();
+                                    }
+                                }
+
                                 // Listen and send
                                 this->transmitter->rsr();
 
                                 // Forced power on
-                                if (this->getPowerControl()->isLockPowerOn()) {
+                                if (powerControl->isLockPowerOn()) {
                                     // If power off, so power on
-                                    if (!this->getPowerControl()->getOutputState()) {
-                                        this->getPowerControl()->powerOn();
+                                    if (!powerControl->getOutputState() || powerControl->isShutdownRequested()) {
+                                        powerControl->powerOn();
+
+                                        // Reset shutdown buffer
+                                        this->getShutdownBuffer()->reset();
                                     }
                                     // Else, nothing to do
                                 }
-                                // Otherwise, power control done by ActionManager
+                                // Auto mode, timeout
+                                else if (powerControl->isAutoMode()) {
+                                    // If power on and if timeout, so power off and reset buffer
+                                    if (
+                                        powerControl->getOutputState() &&
+                                        this->getShutdownBuffer()->isOutdated()
+                                    ) {
+                                        // Request for power off
+                                        powerControl->securePowerOff();
+                                    }
+                                }
 
+                                // Otherwise, power control done by ActionManager
+                                Serial.println(this->getPowerControl()->getOutputState() ? "on" : "off");
                             }
 
                             // Wait 100ms
@@ -177,15 +215,17 @@ namespace com
                                 switchAutoModePin
                             );
 
-                            // Create action manager (process when receive transmission)
-                            ActionManager *actionManager = new ActionManager(this->powerControl);
-                            this->setActionManager(actionManager);
-
                             // Time feature
                             this->shutdownDelayProperty = new StoredProperty<unsigned int>();
-                            // TODO: Need to find available address
-                            this->shutdownDelayProperty->set(30000); // 30s
+                            StoredPropertyManager::configure(this->shutdownDelayProperty);
+                            if (this->shutdownDelayProperty->get() == 0) {
+                                this->shutdownDelayProperty->set(30000); // 30s
+                            }
                             this->shutdownBuffer = new DataBuffer(this->shutdownDelayProperty->get());
+
+                            // Create action manager (process when receive transmission)
+                            ActionManager *actionManager = new ActionManager(this->powerControl, this->shutdownBuffer);
+                            this->setActionManager(actionManager);
                         }
 
                         /**
