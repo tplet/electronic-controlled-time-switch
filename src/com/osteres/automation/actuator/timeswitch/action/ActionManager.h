@@ -50,6 +50,8 @@ namespace com
                             {
                                 // Parent
                                 ArduinoActionManager::processPacket(packet);
+
+                                // PowerControl alias
                                 PowerControl * powerControl = this->getPowerControl();
 
                                 // ENABLE command or DATA command (same process)

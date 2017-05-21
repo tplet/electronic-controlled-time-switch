@@ -13,6 +13,7 @@
 #include <com/osteres/automation/arduino/memory/PinProperty.h>
 #include <com/osteres/automation/arduino/memory/StoredProperty.h>
 #include <com/osteres/automation/arduino/component/DataBuffer.h>
+#include <com/osteres/automation/actuator/timeswitch/action/TransmitState.h>
 
 using com::osteres::automation::arduino::ArduinoApplication;
 using com::osteres::automation::sensor::Identity;
@@ -21,6 +22,7 @@ using com::osteres::automation::actuator::timeswitch::PowerControl;
 using com::osteres::automation::arduino::memory::PinProperty;
 using com::osteres::automation::arduino::memory::StoredProperty;
 using com::osteres::automation::arduino::component::DataBuffer;
+using com::osteres::automation::actuator::timeswitch::action::TransmitState;
 
 namespace com
 {
@@ -81,6 +83,11 @@ namespace com
                                 delete this->shutdownDelayProperty;
                                 this->shutdownDelayProperty = NULL;
                             }
+                            // Remove action transmit state
+                            if (this->actionTransmitState != NULL) {
+                                delete this->actionTransmitState;
+                                this->actionTransmitState = NULL;
+                            }
                         }
 
                         /**
@@ -99,6 +106,7 @@ namespace com
 
 
                             // TEMP
+                            this->getPropertyIdentifier()->set(0);
                             this->getShutdownBuffer()->setBufferDelay(10000); //10s
                         }
 
@@ -162,12 +170,24 @@ namespace com
                                     }
                                 }
 
+                                // Send power state
+                                this->requestForSendData();
+
                                 // Otherwise, power control done by ActionManager
                                 Serial.println(this->getPowerControl()->getOutputState() ? "on" : "off");
                             }
 
                             // Wait 100ms
                             delay(100);
+                        }
+
+                        /**
+                         * Send data to server
+                         */
+                        void requestForSendData()
+                        {
+                            // Process
+                            this->getActionTransmitState()->execute();
                         }
 
                         /**
@@ -192,6 +212,24 @@ namespace com
                         DataBuffer * getShutdownBuffer()
                         {
                             return this->shutdownBuffer;
+                        }
+
+                        /**
+                         * Get action transmit state
+                         */
+                        TransmitState * getActionTransmitState()
+                        {
+                            if (this->actionTransmitState == NULL) {
+                                this->actionTransmitState = new TransmitState(
+                                    this->getPropertyType(),
+                                    this->getPropertyIdentifier(),
+                                    Identity::MASTER,
+                                    this->transmitter,
+                                    this->getPowerControl()
+                                );
+                            }
+
+                            return this->actionTransmitState;
                         }
 
                     protected:
@@ -242,6 +280,11 @@ namespace com
                          * Shutdown delay property
                          */
                         StoredProperty<unsigned int> * shutdownDelayProperty = NULL;
+
+                        /**
+                         * Action to transmit switch state
+                         */
+                        TransmitState * actionTransmitState = NULL;
                     };
                 }
             }

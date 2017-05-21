@@ -1,9 +1,9 @@
 //
-// Created by Thibault PLET on 31/05/2016.
+// Created by Thibault PLET on 21/05/2016.
 //
 
-#ifndef COM_OSTERES_AUTOMATION_SENSOR_MOVEMENT_ACTION_TRANSMITMOVEMENT_H
-#define COM_OSTERES_AUTOMATION_SENSOR_MOVEMENT_ACTION_TRANSMITMOVEMENT_H
+#ifndef COM_OSTERES_AUTOMATION_ACTUATOR_TIMESWITCH_ACTION_TRANSMITSTATE_H
+#define COM_OSTERES_AUTOMATION_ACTUATOR_TIMESWITCH_ACTION_TRANSMITSTATE_H
 
 #include <Arduino.h>
 #include <StandardCplusplus.h>
@@ -13,6 +13,7 @@
 #include <com/osteres/automation/transmission/packet/Command.h>
 #include <com/osteres/automation/arduino/memory/StoredProperty.h>
 #include <com/osteres/automation/memory/Property.h>
+#include <com/osteres/automation/actuator/timeswitch/PowerControl.h>
 
 using com::osteres::automation::action::Action;
 using com::osteres::automation::transmission::Transmitter;
@@ -20,6 +21,7 @@ using com::osteres::automation::transmission::packet::Packet;
 using com::osteres::automation::transmission::packet::Command;
 using com::osteres::automation::memory::Property;
 using com::osteres::automation::arduino::memory::StoredProperty;
+using com::osteres::automation::actuator::timeswitch::PowerControl;
 
 namespace com
 {
@@ -27,29 +29,31 @@ namespace com
     {
         namespace automation
         {
-            namespace sensor
+            namespace actuator
             {
-                namespace movement
+                namespace timeswitch
                 {
                     namespace action
                     {
-                        class TransmitMovement : public Action
+                        class TransmitState : public Action
                         {
                         public:
                             /**
                              * Constructor
                              */
-                            TransmitMovement(
+                            TransmitState(
                                 Property<unsigned char> *propertyType,
                                 StoredProperty<unsigned char> *propertyIdentifier,
                                 unsigned char to,
-                                Transmitter *transmitter
+                                Transmitter *transmitter,
+                                PowerControl * powerControl
                             )
                             {
                                 this->propertyType = propertyType;
                                 this->propertyIdentifier = propertyIdentifier;
                                 this->to = to;
                                 this->transmitter = transmitter;
+                                this->powerControl = powerControl;
                             }
 
                             /**
@@ -65,7 +69,7 @@ namespace com
                                 // Prepare data
                                 packet->setSourceIdentifier(this->propertyIdentifier->get());
                                 packet->setCommand(Command::DATA);
-                                packet->setDataUChar1(1);
+                                packet->setDataUChar1(this->powerControl->getOutputState() ? 1 : 0);
                                 packet->setTarget(this->to);
 
                                 // Transmit packet
@@ -95,6 +99,11 @@ namespace com
                              * Transmitter gateway
                              */
                             Transmitter *transmitter = NULL;
+
+                            /**
+                             * Power control component
+                             */
+                            PowerControl * powerControl = NULL;
                         };
                     }
                 }
@@ -103,4 +112,4 @@ namespace com
     }
 }
 
-#endif //COM_OSTERES_AUTOMATION_SENSOR_MOVEMENT_ACTION_TRANSMITMOVEMENT_H
+#endif //COM_OSTERES_AUTOMATION_ACTUATOR_TIMESWITCH_ACTION_TRANSMITSTATE_H
